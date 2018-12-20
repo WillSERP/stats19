@@ -112,7 +112,7 @@ format_column_names = function(column_names) {
 #' }
 read_schema = function(
   data_dir = tempdir(),
-  filename = "Road-Accident-Safety-Data-Guide.xls",
+  filename = "schema.xls",
   sheet = NULL
 ) {
 

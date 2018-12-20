@@ -4,8 +4,8 @@
 \alias{read_schema}
 \title{Load stats19 schema}
 \usage{
-read_schema(data_dir = tempdir(),
-  filename = "Road-Accident-Safety-Data-Guide.xls", sheet = NULL)
+read_schema(data_dir = tempdir(), filename = "schema.xls",
+  sheet = NULL)
 }
 \arguments{
 \item{data_dir}{Where sets of downloaded data would be found.}

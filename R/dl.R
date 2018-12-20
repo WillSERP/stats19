@@ -93,7 +93,7 @@ dl_schema = function(data_dir = tempdir()) {
     "http://data.dft.gov.uk/road-accidents-safety-data/",
     "Road-Accident-Safety-Data-Guide.xls"
   )
-  destfile = file.path(data_dir, "Road-Accident-Safety-Data-Guide.xls")
+  destfile = file.path(data_dir, "schema.xls")
   utils::download.file(u, destfile = destfile)
   # download and unzip the data if it's not present
 }
