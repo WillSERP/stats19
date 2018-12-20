@@ -2,6 +2,12 @@ context("test-format-read_schema")
 
 source("../skip-download.R")
 
+test_that("read_schema works", {
+  skip_download()
+  t = stats19::read_schema()
+  expect_equal(nrow(t), 969)
+})
+
 context("test-format: accidents")
 
 test_that("format_accidents works", {
