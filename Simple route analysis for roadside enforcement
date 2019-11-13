@@ -1,0 +1,58 @@
+library(tidyverse)
+library(sf)
+library(stats19)
+library(leaflet)
+
+#import data from csv
+crash <- read.csv("File_path/FIlename.csv", header = TRUE)
+
+#remove misplotted data falling outside of box drawn around Essex
+crash_map = filter (crash, Grid.Reference..Easting. > 530000 & Grid.Reference..Easting. < 630000
+                    & Grid.Reference..Northing. > 170000 & Grid.Reference..Northing. < 250000)
+
+#Set coordinate format to eastings and northings
+crash_map = st_as_sf (crash_map, coords = c("Grid.Reference..Easting.", "Grid.Reference..Northing."), crs = 27700)
+
+#get osm data
+remotes::install_github("itsleeds/geofabric")
+library(geofabric)
+library(dplyr)
+region_name = "essex"
+osm_data = get_geofabric(name = region_name)
+head(osm_data)
+head(osm_data$geometry)
+table(osm_data$highway)
+
+#define roads to plot from osm data
+#consider remving links, trunk and motorway to focus on local roads
+roads = osm_data %>%
+  filter(highway %in% c("motorway", "primary", "secondary", "tertiary", "trunk", 
+                        "motorway_link", "primary_link", "secondary_link", "tertiary_link"))
+
+#convert roads to osgb format
+roads_osgb = st_transform(roads, 27700)
+
+#calculate road lengths column 
+roads_osgb$length = st_length(roads_osgb$geometry)
+
+#create 20m buffer around roads_osgb. This causes some overlaps, so further development could focus on resolving this issue.
+polyroads = st_buffer(roads_osgb, dist = 20, endCapStyle = "FLAT", joinStyle = "BEVEL")
+
+#count number of crashes in each polygon and add this as a new column in the polyroads table
+polyroads$crash_count <- lengths(st_intersects(polyroads, crash_map))
+
+#and then another column for crashes per km
+polyroads$crash_per_km = 1000 * polyroads$crash_count / polyroads$length  
+
+#set CRS to Lat/Long
+polyroads_plot <- st_transform(polyroads, 4326)
+
+#leaflet map
+#define map key. bins were selected by trial and error to give the best ability to discriminate between roads in a local area.
+pal = colorBin("RdYlBu", domain = polyroads_plot$crash_per_km, bins = c(0,1,2,5,10,20,50,100,500), pretty = TRUE, reverse = TRUE)
+
+#plot map with legend
+map <- leaflet(data = polyroads_plot) %>%
+  addTiles() %>%
+  addPolygons(col = ~pal(crash_per_km), opacity = 0.8) %>%
+  addLegend(pal = pal, values = ~crash_per_km)
